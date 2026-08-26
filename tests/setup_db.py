@@ -1,0 +1,16 @@
+import sqlite3, sys
+db_path = sys.argv[1] if len(sys.argv) > 1 else "tests/test.db"
+conn = sqlite3.connect(db_path)
+conn.execute("CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, email TEXT)")
+conn.execute("CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, price REAL)")
+conn.execute("CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, product_id INTEGER, FOREIGN KEY (user_id) REFERENCES users(id), FOREIGN KEY (product_id) REFERENCES products(id))")
+conn.execute("INSERT INTO users VALUES (1, 'Alice', 'alice@test.com')")
+conn.execute("INSERT INTO users VALUES (2, 'Bob', 'bob@test.com')")
+conn.execute("INSERT INTO products VALUES (1, 'Laptop', 999.99)")
+conn.execute("INSERT INTO products VALUES (2, 'Book', 19.99)")
+conn.execute("INSERT INTO orders VALUES (1, 1, 1)")
+conn.execute("INSERT INTO orders VALUES (2, 1, 2)")
+conn.execute("INSERT INTO orders VALUES (3, 2, 1)")
+conn.commit()
+conn.close()
+print(f"DB created at {db_path}")

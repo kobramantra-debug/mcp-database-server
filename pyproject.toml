@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mcp-database-server"
+version = "0.1.0"
+description = "MCP Database Server — reasoning interface for databases, not a thin wrapper"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "Lukas" },
+]
+keywords = ["mcp", "database", "sqlite", "postgresql", "mysql", "model-context-protocol", "ai-tools"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Database",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "mcp[cli]>=2.0.0",
+]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.1.0"]
+mysql = ["pymysql>=1.1.0"]
+mssql = ["pyodbc>=5.1.0"]
+all = [
+    "psycopg[binary]>=3.1.0",
+    "pymysql>=1.1.0",
+    "pyodbc>=5.1.0",
+]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/kobramantra-debug/mcp-database-server"
+Repository = "https://github.com/kobramantra-debug/mcp-database-server"
+Issues = "https://github.com/kobramantra-debug/mcp-database-server/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

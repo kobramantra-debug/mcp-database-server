@@ -14,7 +14,7 @@ Reasoning interface for databases — not a thin wrapper.
 ## Install
 
 ```bash
-pip install mcp-database-server
+pip install mcp-database-universal
 
 # With optional engines:
 pip install "mcp-database-server[postgres]"

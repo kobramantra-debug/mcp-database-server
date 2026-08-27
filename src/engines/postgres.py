@@ -31,7 +31,7 @@ class PostgresEngine(BaseEngine):
         except ImportError:
             raise RuntimeError(
                 "PostgreSQL engine requires psycopg. "
-                "Install with: pip install 'mcp-database-server[postgres]'"
+                "Install with: pip install 'mcp-database-universal[postgres]'"
             )
         self._conn = await psycopg.AsyncConnection.connect(
             host=self.host,

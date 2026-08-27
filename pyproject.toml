@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "mcp-database-server"
+name = "mcp-database-universal"
 version = "0.1.0"
 description = "MCP Database Server — reasoning interface for databases, not a thin wrapper"
 readme = "README.md"

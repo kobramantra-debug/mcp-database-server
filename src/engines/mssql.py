@@ -31,7 +31,7 @@ class MSSQLEngine(BaseEngine):
         except ImportError:
             raise RuntimeError(
                 "MSSQL engine requires pyodbc. "
-                "Install with: pip install 'mcp-database-server[mssql]'"
+                "Install with: pip install 'mcp-database-universal[mssql]'"
             )
         conn_str = (
             f"DRIVER={{ODBC Driver 18 for SQL Server}};"

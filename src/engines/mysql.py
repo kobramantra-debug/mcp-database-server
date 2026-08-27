@@ -31,7 +31,7 @@ class MySQLEngine(BaseEngine):
         except ImportError:
             raise RuntimeError(
                 "MySQL engine requires pymysql. "
-                "Install with: pip install 'mcp-database-server[mysql]'"
+                "Install with: pip install 'mcp-database-universal[mysql]'"
             )
         self._conn = pymysql.connect(
             host=self.host,

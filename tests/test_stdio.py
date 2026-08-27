@@ -1,51 +1,48 @@
 """STDIO handshake test for Docker."""
 
+import os
 import subprocess
 import json
 import sys
+import time
+
+from mcp_database_universal import __version__
+
+PROJECT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 
-def test_docker_build():
-    result = subprocess.run(
-        ["docker", "build", "-t", "mcp-db-test:latest", "."],
-        cwd=r"C:\Users\lukas\Desktop\mcp\mcp-db",
-        capture_output=True,
-        text=True,
-        timeout=120,
-    )
-    assert result.returncode == 0, f"Docker build failed:\n{result.stderr}"
+def _run_stdio(messages):
+    """Start the server, send JSON-RPC messages one by one, collect responses.
 
-
-def test_stdio_handshake():
-    init_msg = json.dumps({
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": "initialize",
-        "params": {
-            "protocolVersion": "2024-11-05",
-            "capabilities": {},
-            "clientInfo": {"name": "test-client", "version": "1.0.0"}
-        }
-    }) + "\n"
-
-    result = subprocess.run(
+    Messages are written incrementally so the server has time to process each
+    notification before stdin closes (otherwise responses can race with EOF).
+    """
+    proc = subprocess.Popen(
         [
             "docker", "run", "--rm", "-i",
             "-e", "DATABASE_URL=sqlite:///:memory:",
             "mcp-db-test:latest",
         ],
-        input=init_msg,
-        capture_output=True,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         text=True,
-        timeout=30,
+        encoding="utf-8",
+        errors="replace",
     )
+    for msg in messages:
+        proc.stdin.write(json.dumps(msg) + "\n")
+        proc.stdin.flush()
+        time.sleep(0.3)
+    proc.stdin.close()
+    try:
+        stdout, _ = proc.communicate(timeout=30)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        stdout, _ = proc.communicate()
 
-    assert result.returncode == 0 or result.returncode == -15, \
-        f"Docker STDIO failed (exit {result.returncode}):\nstderr: {result.stderr}"
-
-    lines = result.stdout.strip().split("\n")
     responses = []
-    for line in lines:
+    for line in stdout.strip().split("\n"):
         line = line.strip()
         if not line:
             continue
@@ -53,8 +50,37 @@ def test_stdio_handshake():
             responses.append(json.loads(line))
         except json.JSONDecodeError:
             continue
+    return responses
 
-    assert len(responses) >= 1, f"No valid JSON-RPC responses found in stdout. Raw: {result.stdout[:500]}"
+
+def test_docker_build():
+    result = subprocess.run(
+        ["docker", "build", "-t", "mcp-db-test:latest", "."],
+        cwd=PROJECT_DIR,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=120,
+    )
+    assert result.returncode == 0, f"Docker build failed:\n{result.stderr}"
+
+
+def test_stdio_handshake():
+    responses = _run_stdio([
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "test-client", "version": "1.0.0"}
+            },
+        },
+    ])
+
+    assert len(responses) >= 1, f"No valid JSON-RPC responses found in stdout."
 
     init_response = responses[0]
     assert init_response.get("jsonrpc") == "2.0"
@@ -65,58 +91,24 @@ def test_stdio_handshake():
     assert "serverInfo" in init_response["result"]
 
     assert init_response["result"]["serverInfo"]["name"] == "mcp-database-server"
-    assert init_response["result"]["serverInfo"]["version"] == "0.1.0"
+    assert init_response["result"]["serverInfo"]["version"] == __version__
 
 
 def test_stdio_tools_list():
-    init_msg = json.dumps({
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": "initialize",
-        "params": {
-            "protocolVersion": "2024-11-05",
-            "capabilities": {},
-            "clientInfo": {"name": "test-client", "version": "1.0.0"}
-        }
-    }) + "\n"
-
-    notify_msg = json.dumps({
-        "jsonrpc": "2.0",
-        "method": "notifications/initialized",
-        "params": {}
-    }) + "\n"
-
-    tools_msg = json.dumps({
-        "jsonrpc": "2.0",
-        "id": 2,
-        "method": "tools/list",
-        "params": {}
-    }) + "\n"
-
-    full_input = init_msg + notify_msg + tools_msg
-
-    result = subprocess.run(
-        [
-            "docker", "run", "--rm", "-i",
-            "-e", "DATABASE_URL=sqlite:///:memory:",
-            "mcp-db-test:latest",
-        ],
-        input=full_input,
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-
-    lines = result.stdout.strip().split("\n")
-    responses = []
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            responses.append(json.loads(line))
-        except json.JSONDecodeError:
-            continue
+    responses = _run_stdio([
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "test-client", "version": "1.0.0"}
+            },
+        },
+        {"jsonrpc": "2.0", "method": "notifications/initialized", "params": {}},
+        {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}},
+    ])
 
     assert len(responses) >= 2, f"Expected 2+ responses, got {len(responses)}"
 

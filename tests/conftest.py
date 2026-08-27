@@ -7,6 +7,10 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+if sys.platform == "win32":
+    # psycopg async needs a selector (not Proactor) event loop
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 from mcp_database_universal.engines.sqlite import SQLiteEngine
 from mcp_database_universal.config import DatabaseConfig
 

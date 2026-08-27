@@ -8,3 +8,8 @@ build/
 .env
 *.db
 .DS_Store
+
+# Internal design/dev docs — never publish
+DESIGN.md
+MCP_DEVELOPMENT_GUIDE_MCP_DB.md
+HF_README.md

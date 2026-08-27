@@ -1,0 +1,11 @@
+{
+  "mcp": {
+    "database": {
+      "type": "stdio",
+      "command": ["python", "-m", "mcp_database_universal"],
+      "env": {
+        "DATABASE_URL": "sqlite:///C:/path/to/examples/sample.db"
+      }
+    }
+  }
+}

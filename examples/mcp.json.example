@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "database": {
+      "command": "uvx",
+      "args": ["mcp-database-universal"],
+      "env": {
+        "DATABASE_URL": "sqlite:///C:/path/to/examples/sample.db"
+      }
+    }
+  }
+}

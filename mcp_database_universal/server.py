@@ -10,6 +10,7 @@ from mcp_database_universal.engines.base import BaseEngine
 from mcp_database_universal.safety import SafetyValidator
 from mcp_database_universal.schema_inspector import SchemaInspector
 from mcp_database_universal.formatters.llm import LLMFormatter
+from mcp_database_universal import __version__
 
 logger = logging.getLogger("mcp-db")
 
@@ -17,7 +18,7 @@ logger = logging.getLogger("mcp-db")
 async def create_server(config: DatabaseConfig, engine: BaseEngine) -> MCPServer:
     server = MCPServer(
         name="mcp-database-server",
-        version="0.1.0",
+        version=__version__,
     )
 
     safety = SafetyValidator(

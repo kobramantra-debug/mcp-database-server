@@ -4,6 +4,7 @@ import time
 from mcp_database_universal.engines.base import (
     BaseEngine, DBInfo, ColumnInfo, TableInfo, TableDetail,
     IndexInfo, ForeignKeyInfo, TableStats, QueryResult,
+    _named_to_pyformat,
 )
 
 
@@ -54,12 +55,14 @@ class PostgresEngine(BaseEngine):
 
     async def get_db_info(self) -> DBInfo:
         conn = self._ensure_conn()
-        row = await conn.execute("SELECT version()").fetchone()
+        cur = await conn.execute("SELECT version()")
+        row = await cur.fetchone()
         version = row[0] if row else "unknown"
         try:
-            row2 = await conn.execute(
+            cur = await conn.execute(
                 "SELECT pg_size_pretty(pg_database_size(current_database()))"
-            ).fetchone()
+            )
+            row2 = await cur.fetchone()
             size = row2[0] if row2 else "unknown"
         except Exception:
             size = "unknown"
@@ -67,27 +70,30 @@ class PostgresEngine(BaseEngine):
 
     async def get_tables(self) -> list[TableInfo]:
         conn = self._ensure_conn()
-        rows = await conn.execute("""
+        cur = await conn.execute("""
             SELECT t.table_name
             FROM information_schema.tables t
             WHERE t.table_schema = 'public' AND t.table_type = 'BASE TABLE'
             ORDER BY t.table_name
-        """).fetchall()
+        """)
+        rows = await cur.fetchall()
 
         tables = []
         for row in rows:
             name = row[0]
             try:
-                cnt = await conn.execute(f'SELECT COUNT(*) FROM "{name}"').fetchone()
+                cur = await conn.execute(f'SELECT COUNT(*) FROM "{name}"')
+                cnt = await cur.fetchone()
                 row_count = cnt[0] if cnt else 0
             except Exception:
                 row_count = 0
 
             try:
-                cols = await conn.execute("""
+                cur = await conn.execute("""
                     SELECT COUNT(*) FROM information_schema.columns
                     WHERE table_schema = 'public' AND table_name = %s
-                """, [name]).fetchone()
+                """, [name])
+                cols = await cur.fetchone()
                 col_count = cols[0] if cols else 0
             except Exception:
                 col_count = 0
@@ -103,7 +109,7 @@ class PostgresEngine(BaseEngine):
     async def get_table_detail(self, table: str) -> TableDetail:
         conn = self._ensure_conn()
 
-        col_rows = await conn.execute("""
+        cur = await conn.execute("""
             SELECT c.column_name, c.data_type, c.is_nullable, c.column_default,
                    CASE WHEN pk.column_name IS NOT NULL THEN true ELSE false END as is_pk
             FROM information_schema.columns c
@@ -116,7 +122,8 @@ class PostgresEngine(BaseEngine):
             ) pk ON c.column_name = pk.column_name
             WHERE c.table_schema = 'public' AND c.table_name = %s
             ORDER BY c.ordinal_position
-        """, [table, table]).fetchall()
+        """, [table, table])
+        col_rows = await cur.fetchall()
 
         columns = []
         pk_name = None
@@ -132,7 +139,7 @@ class PostgresEngine(BaseEngine):
                 is_primary_key=is_pk,
             ))
 
-        fk_rows = await conn.execute("""
+        cur = await conn.execute("""
             SELECT
                 kcu.column_name,
                 ccu.table_name AS foreign_table_name,
@@ -143,7 +150,8 @@ class PostgresEngine(BaseEngine):
             JOIN information_schema.constraint_column_usage ccu
                 ON tc.constraint_name = ccu.constraint_name
             WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_name = %s
-        """, [table]).fetchall()
+        """, [table])
+        fk_rows = await cur.fetchall()
 
         foreign_keys = []
         fk_cols = set()
@@ -164,11 +172,12 @@ class PostgresEngine(BaseEngine):
                         col.foreign_key_column = fk.references_column
                         break
 
-        idx_rows = await conn.execute("""
+        cur = await conn.execute("""
             SELECT indexname, indexdef
             FROM pg_indexes
             WHERE tablename = %s AND schemaname = 'public'
-        """, [table]).fetchall()
+        """, [table])
+        idx_rows = await cur.fetchall()
 
         indexes = []
         for idx in idx_rows:
@@ -177,10 +186,11 @@ class PostgresEngine(BaseEngine):
             indexes.append(IndexInfo(name=name, columns=[], unique=unique))
 
         try:
-            sample = await conn.execute(f'SELECT * FROM "{table}" LIMIT 5').fetchall()
-            if sample:
-                cols_desc = sample[0].keys() if hasattr(sample[0], 'keys') else []
-                sample_data = [dict(row) for row in sample]
+            cur = await conn.execute(f'SELECT * FROM "{table}" LIMIT 5')
+            sample_rows = await cur.fetchall()
+            if sample_rows:
+                cols_d = [d.name for d in cur.description] if cur.description else []
+                sample_data = [dict(zip(cols_d, row)) for row in sample_rows]
             else:
                 sample_data = []
         except Exception:
@@ -202,6 +212,7 @@ class PostgresEngine(BaseEngine):
         conn = self._ensure_conn()
         start = time.monotonic()
         try:
+            sql, params = self._translate_params(sql, params)
             if params:
                 cur = await conn.execute(sql, params)
             else:
@@ -209,7 +220,7 @@ class PostgresEngine(BaseEngine):
             rows = await cur.fetchall()
             columns = [desc.name for desc in cur.description] if cur.description else []
             elapsed = int((time.monotonic() - start) * 1000)
-            result_rows = [dict(row) for row in rows]
+            result_rows = [dict(zip(columns, row)) for row in rows]
             return QueryResult(
                 columns=columns,
                 rows=result_rows,
@@ -232,15 +243,17 @@ class PostgresEngine(BaseEngine):
     async def get_table_stats(self, table: str) -> TableStats:
         conn = self._ensure_conn()
         try:
-            row = await conn.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()
+            cur = await conn.execute(f'SELECT COUNT(*) FROM "{table}"')
+            row = await cur.fetchone()
             row_count = row[0] if row else 0
         except Exception:
             row_count = 0
 
         try:
-            row = await conn.execute(
+            cur = await conn.execute(
                 "SELECT pg_size_pretty(pg_total_relation_size(%s))", [table]
-            ).fetchone()
+            )
+            row = await cur.fetchone()
             total_size = row[0] if row else "unknown"
         except Exception:
             total_size = "unknown"

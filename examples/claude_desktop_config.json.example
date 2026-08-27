@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "database": {
+      "command": "python",
+      "args": ["-m", "mcp_database_universal"],
+      "env": {
+        "DATABASE_URL": "sqlite:///C:/path/to/examples/sample.db"
+      }
+    }
+  }
+}

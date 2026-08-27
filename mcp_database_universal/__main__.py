@@ -88,4 +88,7 @@ async def main():
 
 
 if __name__ == "__main__":
+    if sys.platform == "win32":
+        # psycopg async does not work with ProactorEventLoop (Windows default)
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     asyncio.run(main())

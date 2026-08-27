@@ -1,5 +1,6 @@
 """Abstract base class for database engines."""
 
+import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
@@ -79,9 +80,27 @@ class QueryResult:
     warning: str | None = None
 
 
+_NAMED_PARAM_RE = re.compile(r":([A-Za-z_][A-Za-z0-9_]*)")
+
+
+def _named_to_pyformat(sql: str) -> str:
+    """Convert :name named params (SQLite style) to %(name)s (DBAPI pyformat style).
+
+    Used by psycopg (PostgreSQL), pymysql (MySQL) and MSSQL drivers,
+    which do not understand the :name syntax.
+    """
+    return _NAMED_PARAM_RE.sub(r"%(\1)s", sql)
+
+
 class BaseEngine(ABC):
     @abstractmethod
     async def connect(self) -> None: ...
+
+    def _translate_params(self, sql: str, params: dict | None) -> tuple[str, dict | None]:
+        """Normalize :name params to the driver-native style when params are given."""
+        if params:
+            sql = _named_to_pyformat(sql)
+        return sql, params
 
     @abstractmethod
     async def disconnect(self) -> None: ...

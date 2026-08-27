@@ -134,6 +134,7 @@ class MSSQLEngine(BaseEngine):
         conn = self._ensure_conn()
         start = time.monotonic()
         try:
+            sql, params = self._translate_params(sql, params)
             cur = conn.cursor()
             if params:
                 cur.execute(sql, params)

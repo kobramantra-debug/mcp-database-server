@@ -4,6 +4,7 @@ import time
 from mcp_database_universal.engines.base import (
     BaseEngine, DBInfo, ColumnInfo, TableInfo, TableDetail,
     IndexInfo, ForeignKeyInfo, TableStats, QueryResult,
+    _named_to_pyformat,
 )
 
 
@@ -139,6 +140,7 @@ class MySQLEngine(BaseEngine):
         conn = self._ensure_conn()
         start = time.monotonic()
         try:
+            sql, params = self._translate_params(sql, params)
             with conn.cursor() as cur:
                 if params:
                     cur.execute(sql, params)
@@ -149,7 +151,7 @@ class MySQLEngine(BaseEngine):
                 elapsed = int((time.monotonic() - start) * 1000)
                 return QueryResult(
                     columns=columns,
-                    rows=rows,
+                    rows=list(rows),
                     row_count=len(rows),
                     truncated=False,
                     execution_time_ms=elapsed,

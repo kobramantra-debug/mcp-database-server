@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mcp-database-universal"
-version = "0.1.1"
+version = "0.1.2"
 description = "MCP Database Server — reasoning interface for databases, not a thin wrapper"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
 authors = [
-    { name = "Lukas" },
+    { name = "mcp-database-universal contributors" },
 ]
 keywords = ["mcp", "database", "sqlite", "postgresql", "mysql", "model-context-protocol", "ai-tools"]
 classifiers = [

@@ -101,7 +101,7 @@ async def test_query_blocked_drop(server_with_db):
 @pytest.mark.asyncio
 async def test_natural_query_count(server_with_db):
     server, engine = server_with_db
-    result = await server.call_tool("natural_query", {"question": "kolik users"})
+    result = await server.call_tool("natural_query", {"question": "how many users"})
     text = _get_text(result)
     assert "count" in text.lower() or "2" in text
     await engine.disconnect()

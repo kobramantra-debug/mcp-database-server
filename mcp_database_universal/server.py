@@ -1,7 +1,6 @@
 """MCP Database Server — main server with 7 reasoning tools."""
 
 import json
-import re
 import sys
 import logging
 from mcp.server.mcpserver import MCPServer
@@ -10,6 +9,7 @@ from mcp_database_universal.engines.base import BaseEngine
 from mcp_database_universal.safety import SafetyValidator
 from mcp_database_universal.schema_inspector import SchemaInspector
 from mcp_database_universal.formatters.llm import LLMFormatter
+from mcp_database_universal.nl2sql import translate
 from mcp_database_universal import __version__
 
 logger = logging.getLogger("mcp-db")
@@ -119,51 +119,30 @@ async def create_server(config: DatabaseConfig, engine: BaseEngine) -> MCPServer
         about the data. Examples: "How many users have orders?",
         "What product sells the best?"
 
+        Translation: an LLM (OpenAI/Anthropic) is used when OPENAI_API_KEY or
+        ANTHROPIC_API_KEY is configured; otherwise a built-in rules-based
+        parser handles common English question shapes.
+
         Returns: generated SQL + results + explanation.
         """
-        question_lower = question.lower().strip()
         tables = await engine.get_tables()
         table_names = [t.name for t in tables]
-        table_map = {t.name.lower(): t.name for t in tables}
 
-        sql = None
+        translation = await translate(
+            question,
+            table_names,
+            openai_key=config.openai_key,
+            anthropic_key=config.anthropic_key,
+        )
 
-        count_match = re.search(r'(?:kolik|count|how many)\s+(\w+)', question_lower)
-        if count_match:
-            candidate = count_match.group(1)
-            if candidate in table_map:
-                real_name = table_map[candidate]
-                sql = f'SELECT COUNT(*) as count FROM "{real_name}"'
-
+        sql = translation.sql
         if not sql:
-            select_match = re.search(r'(?:vsechny|zobraz|ukaž|show|select|get)\s+(\w+)', question_lower)
-            if select_match:
-                candidate = select_match.group(1)
-                if candidate in table_map:
-                    real_name = table_map[candidate]
-                    sql = f'SELECT * FROM "{real_name}" LIMIT 100'
-
-        if not sql:
-            where_match = re.search(r'(\w+)\s+(?:s|where|with)\s+(\w+)\s*[=:]\s*["\']?(\w+)["\']?', question_lower)
-            if where_match:
-                table_cand, col_cand, val = where_match.groups()
-                if table_cand in table_map:
-                    real_name = table_map[table_cand]
-                    sql = f'SELECT * FROM "{real_name}" WHERE "{col_cand}" = ? LIMIT 100'
-
-        if not sql:
-            top_match = re.search(r'nej(?:vetsi|mensi|lepsi|drazsi|levnejsi|best|worst|top)\s+(\w+)\s+v\s+(\w+)', question_lower)
-            if not top_match:
-                top_match = re.search(r'(?:top|best|worst|highest|lowest)\s+(\w+)\s+(?:in|from)\s+(\w+)', question_lower)
-            if top_match:
-                col_cand, table_cand = top_match.groups()
-                if table_cand in table_map:
-                    real_name = table_map[table_cand]
-                    sql = f'SELECT * FROM "{real_name}" ORDER BY "{col_cand}" DESC LIMIT 10'
-
-        if not sql:
+            reason = translation.error or "no matching pattern"
+            source_note = f" (LLM: {reason})" if translation.source == "llm" else ""
             return (
-                "Could not automatically translate your question to SQL.\n\n"
+                "Could not automatically translate your question to SQL"
+                + source_note
+                + ".\n\n"
                 "Try using the `query` tool directly with SQL, or rephrase your question.\n"
                 f"Available tables: {', '.join(table_names)}\n\n"
                 "Examples:\n"
@@ -172,13 +151,15 @@ async def create_server(config: DatabaseConfig, engine: BaseEngine) -> MCPServer
                 "- 'What products cost more than 100?'"
             )
 
-        validation = safety.validate(sql)
+        safe_sql = safety.ensure_limit(sql)
+        validation = safety.validate(safe_sql)
         if not validation.approved:
             return f"Generated query was blocked: {validation.reason}"
 
-        result = await engine.execute_query(sql)
+        result = await engine.execute_query(safe_sql)
         output = formatter.format_query_result(result)
-        output = f"**Question:** {question}\n\n{output}"
+        source_note = "LLM" if translation.source == "llm" else "rules-based"
+        output = f"**Question:** {question}\n**Generated SQL** ({source_note}): `{safe_sql}`\n\n{output}"
         return output
 
     @server.tool()

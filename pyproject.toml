@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mcp-database-universal"
-version = "0.1.2"
+version = "0.1.3"
 description = "MCP Database Server — reasoning interface for databases, not a thin wrapper"
 readme = "README.md"
 license = "MIT"

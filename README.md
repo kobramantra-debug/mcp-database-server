@@ -83,8 +83,8 @@ All configuration is done through environment variables.
 | `DATABASE_MAX_OUTPUT_BYTES` | `50000`   | Cap on result payload size.                            |
 | `DATABASE_SAMPLE_SIZE`      | `5`       | Number of sample rows shown in table/column stats.     |
 | `DATABASE_PROFILE_TOP_N`    | `10`      | Top-N value distribution entries in profiling.         |
-| `OPENAI_API_KEY`            | —         | API key for the LLM-backed `natural_query` mode.       |
-| `ANTHROPIC_API_KEY`         | —         | API key for the LLM-backed `natural_query` mode.       |
+| `OPENAI_API_KEY`            | —         | API key for the LLM-backed `natural_query` (OpenAI).            |
+| `ANTHROPIC_API_KEY`         | —         | API key for the LLM-backed `natural_query` (Anthropic).         |
 
 ## Tools
 
@@ -117,6 +117,15 @@ question: "How many users are there?"
 question: "Show me all orders"
 -> SELECT * FROM orders LIMIT 100
 ```
+
+How the question is translated:
+
+- If `OPENAI_API_KEY` (or `ANTHROPIC_API_KEY`) is set, the question is sent to
+  an LLM that returns a single read-only SQL statement. The result always
+  passes through the safety validator before execution.
+- Otherwise a built-in rules-based parser handles common English question
+  shapes ("how many X", "show me X", "top N <column> in X", "X where column = value").
+  It matches table names against the database's real schema.
 
 A working example against a small sample database is in [`examples/`](examples/) together with ready-to-use configuration snippets for common MCP clients.
 

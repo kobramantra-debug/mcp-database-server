@@ -27,7 +27,7 @@ Oficiální `server-postgres` a `server-sqlite` byly **archivovány kvůli SQL i
 ```
 src/
   __init__.py          # Package init
-  __main__.py          # Entry point (python -m src)
+  __main__.py          # Entry point (python -m mcp_database_universal)
   server.py            # MCPServer with all tools
   engines/
     __init__.py

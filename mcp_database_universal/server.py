@@ -5,11 +5,11 @@ import re
 import sys
 import logging
 from mcp.server.mcpserver import MCPServer
-from src.config import DatabaseConfig
-from src.engines.base import BaseEngine
-from src.safety import SafetyValidator
-from src.schema_inspector import SchemaInspector
-from src.formatters.llm import LLMFormatter
+from mcp_database_universal.config import DatabaseConfig
+from mcp_database_universal.engines.base import BaseEngine
+from mcp_database_universal.safety import SafetyValidator
+from mcp_database_universal.schema_inspector import SchemaInspector
+from mcp_database_universal.formatters.llm import LLMFormatter
 
 logger = logging.getLogger("mcp-db")
 

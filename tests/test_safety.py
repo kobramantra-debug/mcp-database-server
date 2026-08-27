@@ -1,7 +1,7 @@
 """Tests for safety layer."""
 
 import pytest
-from src.safety import SafetyValidator, QueryType
+from mcp_database_universal.safety import SafetyValidator, QueryType
 
 
 def test_select_approved():

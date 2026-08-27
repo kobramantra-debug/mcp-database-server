@@ -3,7 +3,7 @@
 import sqlite3
 import os
 import time
-from src.engines.base import (
+from mcp_database_universal.engines.base import (
     BaseEngine, DBInfo, ColumnInfo, TableInfo, TableDetail,
     IndexInfo, ForeignKeyInfo, TableStats, QueryResult,
 )

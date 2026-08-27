@@ -1,7 +1,7 @@
 """Engine factory — auto-detect engine from DATABASE_URL."""
 
 from urllib.parse import urlparse
-from src.engines.base import BaseEngine
+from mcp_database_universal.engines.base import BaseEngine
 
 
 def get_engine(url: str, read_only: bool = True) -> BaseEngine:
@@ -9,7 +9,7 @@ def get_engine(url: str, read_only: bool = True) -> BaseEngine:
     scheme = parsed.scheme.lower()
 
     if scheme == "sqlite":
-        from src.engines.sqlite import SQLiteEngine
+        from mcp_database_universal.engines.sqlite import SQLiteEngine
         path = parsed.netloc + parsed.path
         if path == ":memory:" or path == "/:memory:":
             path = ":memory:"
@@ -18,7 +18,7 @@ def get_engine(url: str, read_only: bool = True) -> BaseEngine:
         return SQLiteEngine(path=path, read_only=read_only)
 
     if scheme in ("postgresql", "postgres"):
-        from src.engines.postgres import PostgresEngine
+        from mcp_database_universal.engines.postgres import PostgresEngine
         return PostgresEngine(
             host=parsed.hostname or "localhost",
             port=parsed.port or 5432,
@@ -29,7 +29,7 @@ def get_engine(url: str, read_only: bool = True) -> BaseEngine:
         )
 
     if scheme == "mysql":
-        from src.engines.mysql import MySQLEngine
+        from mcp_database_universal.engines.mysql import MySQLEngine
         return MySQLEngine(
             host=parsed.hostname or "localhost",
             port=parsed.port or 3306,
@@ -40,7 +40,7 @@ def get_engine(url: str, read_only: bool = True) -> BaseEngine:
         )
 
     if scheme in ("mssql", "sqlserver"):
-        from src.engines.mssql import MSSQLEngine
+        from mcp_database_universal.engines.mssql import MSSQLEngine
         return MSSQLEngine(
             host=parsed.hostname or "localhost",
             port=parsed.port or 1433,

@@ -25,7 +25,7 @@ pip install "mcp-database-server[mssql]"
 ## Usage
 
 ```bash
-DATABASE_URL=sqlite:///mydb.db python -m src
+DATABASE_URL=sqlite:///mydb.db python -m mcp_database_universal
 ```
 
 ## Docker

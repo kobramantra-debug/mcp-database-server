@@ -7,8 +7,8 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.engines.sqlite import SQLiteEngine
-from src.config import DatabaseConfig
+from mcp_database_universal.engines.sqlite import SQLiteEngine
+from mcp_database_universal.config import DatabaseConfig
 
 
 @pytest.fixture

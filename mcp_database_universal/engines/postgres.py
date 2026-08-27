@@ -1,7 +1,7 @@
 """PostgreSQL engine — optional dependency: psycopg[binary]>=3.1.0."""
 
 import time
-from src.engines.base import (
+from mcp_database_universal.engines.base import (
     BaseEngine, DBInfo, ColumnInfo, TableInfo, TableDetail,
     IndexInfo, ForeignKeyInfo, TableStats, QueryResult,
 )

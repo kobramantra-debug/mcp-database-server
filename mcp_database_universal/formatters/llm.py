@@ -1,8 +1,8 @@
 """LLM-friendly output formatting for database results."""
 
 from dataclasses import dataclass
-from src.config import DatabaseConfig
-from src.engines.base import DBInfo, TableInfo, TableDetail, TableStats, QueryResult
+from mcp_database_universal.config import DatabaseConfig
+from mcp_database_universal.engines.base import DBInfo, TableInfo, TableDetail, TableStats, QueryResult
 
 
 TYPE_TRANSLATIONS = {

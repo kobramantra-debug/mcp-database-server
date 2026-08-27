@@ -1,8 +1,8 @@
 """Tests for SQLite engine."""
 
 import pytest
-from src.engines.sqlite import SQLiteEngine
-from src.engines.base import DBInfo, TableInfo, TableDetail, QueryResult
+from mcp_database_universal.engines.sqlite import SQLiteEngine
+from mcp_database_universal.engines.base import DBInfo, TableInfo, TableDetail, QueryResult
 
 
 @pytest.mark.asyncio

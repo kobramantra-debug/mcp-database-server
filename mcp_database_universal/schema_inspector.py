@@ -1,7 +1,7 @@
 """Schema inspector — discovers tables, columns, relationships."""
 
 from dataclasses import dataclass, field
-from src.engines.base import BaseEngine
+from mcp_database_universal.engines.base import BaseEngine
 
 
 @dataclass

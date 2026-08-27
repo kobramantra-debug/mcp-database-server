@@ -4,10 +4,9 @@ WORKDIR /app
 
 COPY pyproject.toml README.md ./
 RUN pip install --no-cache-dir .
-
-COPY src/ src/
+COPY mcp_database_universal/ mcp_database_universal/
 
 RUN useradd --create-home mcpuser
 USER mcpuser
 
-ENTRYPOINT ["python", "-m", "src"]
+ENTRYPOINT ["python", "-m", "mcp_database_universal"]

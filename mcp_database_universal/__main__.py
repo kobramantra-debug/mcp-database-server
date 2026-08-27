@@ -73,9 +73,9 @@ def _parse_url(url: str) -> tuple[str, dict]:
 
 
 async def main():
-    from src.config import DatabaseConfig
-    from src.engines import get_engine
-    from src.server import create_server
+    from mcp_database_universal.config import DatabaseConfig
+    from mcp_database_universal.engines import get_engine
+    from mcp_database_universal.server import create_server
 
     config = DatabaseConfig.from_env()
     engine = get_engine(config.url)

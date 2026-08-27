@@ -69,7 +69,7 @@ Stejné nástroje, stejný výstup, ať používáš cokoliv. Engine se pozná z
 mcp-db/
 ├── src/
 │   ├── __init__.py
-│   ├── __main__.py              # python -m src
+│   ├── __main__.py              # python -m mcp_database_universal
 │   ├── server.py                # MCPServer — registrace nástrojů
 │   ├── config.py                # Načtení env var, validace
 │   ├── safety.py                # SQL validation, write detection, limity

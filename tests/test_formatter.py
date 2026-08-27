@@ -1,9 +1,9 @@
 """Tests for LLM formatter."""
 
 import pytest
-from src.formatters.llm import LLMFormatter
-from src.config import DatabaseConfig
-from src.engines.base import (
+from mcp_database_universal.formatters.llm import LLMFormatter
+from mcp_database_universal.config import DatabaseConfig
+from mcp_database_universal.engines.base import (
     DBInfo, TableInfo, TableDetail, TableStats, ColumnInfo,
     ForeignKeyInfo, IndexInfo, QueryResult,
 )
